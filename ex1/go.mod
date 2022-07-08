@@ -7,7 +7,9 @@ require (
 	github.com/go-chi/chi v1.5.4
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/jinzhu/gorm v1.9.16
+	github.com/joho/godotenv v1.4.0
 	github.com/vektah/gqlparser/v2 v2.4.6
+	github.com/vrischmann/envconfig v1.3.0
 )
 
 require (

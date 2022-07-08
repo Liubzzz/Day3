@@ -10,7 +10,6 @@ import (
 	"ex1/entity"
 	"ex1/graph/generated"
 	"ex1/graph/model"
-	"fmt"
 )
 
 // CreateTodo is the resolver for the createTodo field.
@@ -28,16 +27,20 @@ func (r *mutationResolver) CreateCompany(ctx context.Context, input model.NewCom
 	bytes, _ := json.Marshal(input)
 	company := &entity.Company{}
 	json.Unmarshal(bytes, &company)
-	db.GetDB().Save(company)
+	result := db.GetDB().Save(company)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	return company, nil
 }
 
 // CreateEmployee is the resolver for the createEmployee field.
 func (r *mutationResolver) CreateEmployee(ctx context.Context, input model.NewEmployee) (*entity.Employee, error) {
+
 	bytes, _ := json.Marshal(input)
 	employee := &entity.Employee{}
 	json.Unmarshal(bytes, &employee)
-	db.GetDB().Save(employee)
+	db.GetDB().Where("name=?", input.Name).Save(employee)
 	return employee, nil
 }
 
@@ -63,12 +66,16 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 }
 
 // Company is the resolver for the company field.
-func (r *queryResolver) Company(ctx context.Context) (*entity.Company, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Company(ctx context.Context, name string) (*entity.Company, error) {
+	company := new(entity.Company)
+	db.GetDB().Where("name=?", name).First(company)
+	return company, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+func (r *Resolver) Mutation() generated.MutationResolver {
+	return &mutationResolver{r}
+}
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }

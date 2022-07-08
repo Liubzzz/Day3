@@ -1,7 +1,6 @@
 package db
 
 import (
-	"ex1/config"
 	"fmt"
 
 	"github.com/golang-migrate/migrate"
@@ -13,8 +12,7 @@ import (
 var db *gorm.DB
 
 func InitDatabase() {
-	databaseURL := config.GetConfig().Database.URL
-	migrateConnection, err := migrate.New("file://db/migrate", databaseURL)
+	migrateConnection, err := migrate.New("file://db/migrate", "postgres://postgres:mysecretpassword@localhost:5432/learning?sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -26,14 +24,14 @@ func InitDatabase() {
 	}
 	migrateConnection.Close()
 
-	dbConnection, err := gorm.Open("postgres", databaseURL)
+	dbConnection, err := gorm.Open("postgres", "postgres://postgres:mysecretpassword@localhost:5432/learning?sslmode=disable")
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	db = dbConnection
-	db.LogMode(config.GetConfig().Database.LogMode)
+	db.LogMode(true)
 }
 
 func GetDB() *gorm.DB {

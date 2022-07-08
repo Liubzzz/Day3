@@ -76,7 +76,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Company func(childComplexity int) int
+		Company func(childComplexity int, name string) int
 		Todos   func(childComplexity int) int
 		Users   func(childComplexity int) int
 	}
@@ -102,7 +102,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Todos(ctx context.Context) ([]*model.Todo, error)
 	Users(ctx context.Context) ([]*model.User, error)
-	Company(ctx context.Context) (*entity.Company, error)
+	Company(ctx context.Context, name string) (*entity.Company, error)
 }
 
 type executableSchema struct {
@@ -266,7 +266,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Company(childComplexity), true
+		args, err := ec.field_Query_company_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Company(childComplexity, args["name"].(string)), true
 
 	case "Query.todos":
 		if e.complexity.Query.Todos == nil {
@@ -417,7 +422,7 @@ type Company{
 type Query {
   todos: [Todo!]!
   users:[User]!
-  company:Company
+  company(name:String!):Company!
 }
 
 type Location{
@@ -515,6 +520,21 @@ func (ec *executionContext) field_Mutation_createTodo_args(ctx context.Context, 
 }
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_company_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1570,18 +1590,21 @@ func (ec *executionContext) _Query_company(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Company(rctx)
+		return ec.resolvers.Query().Company(rctx, fc.Args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*entity.Company)
 	fc.Result = res
-	return ec.marshalOCompany2ᚖex1ᚋentityᚐCompany(ctx, field.Selections, res)
+	return ec.marshalNCompany2ᚖex1ᚋentityᚐCompany(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_company(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1605,6 +1628,17 @@ func (ec *executionContext) fieldContext_Query_company(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Company", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_company_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -4273,6 +4307,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_company(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -5264,13 +5301,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOCompany2ᚖex1ᚋentityᚐCompany(ctx context.Context, sel ast.SelectionSet, v *entity.Company) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Company(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEmployee2ex1ᚋentityᚐEmployee(ctx context.Context, sel ast.SelectionSet, v entity.Employee) graphql.Marshaler {
