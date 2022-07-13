@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "sample"
+  labels: 
+    app: "sample"
+
+
+spec: 
+  containers:
+    - name: "golang"
+      image: "princeatoss/golanggraph:1.0"
+      ports:
+        - containerPort: 8080

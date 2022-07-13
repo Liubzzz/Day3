@@ -45,4 +45,12 @@ CREATE TABLE employees (
     CONSTRAINT employees_fk_1 FOREIGN KEY (company_id) REFERENCES companies(id),
         CONSTRAINT employees_ukey UNIQUE(name)
 );
+CREATE TABLE public.employee (
+    firstname varchar NULL,
+    lastname varchar NULL,
+    id serial4 NOT NULL,
+    birthdate date NULL,
+    CONSTRAINT employee_pk PRIMARY KEY (id)
+);
 commit;
+ 
